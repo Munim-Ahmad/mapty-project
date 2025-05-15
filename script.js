@@ -17,6 +17,12 @@ import {
   where,
 } from 'firebase/firestore';
 
+import { Buffer } from 'buffer';
+window.Buffer = Buffer;
+
+import process from 'process';
+window.process = process;
+
 class Workout {
   date = new Date();
   id = (Date.now() + '').slice(-10);

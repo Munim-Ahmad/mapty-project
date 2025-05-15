@@ -5,6 +5,10 @@
     "start": "parcel index.html",
     "build": "parcel build index.html"
   },
+  "alias": {
+    "buffer": "buffer",
+    "process": "process/browser"
+  },
   "author": "",
   "license": "ISC",
   "description": "",
@@ -12,8 +16,10 @@
     "parcel": "^2.14.4"
   },
   "dependencies": {
+    "buffer": "^6.0.3",
     "firebase": "^11.7.3",
     "leaflet": "^1.9.4",
-    "lodash": "^4.17.21"
+    "lodash": "^4.17.21",
+    "process": "^0.11.10"
   }
 }
