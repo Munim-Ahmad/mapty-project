@@ -12,6 +12,7 @@
     "parcel": "^2.14.4"
   },
   "dependencies": {
+    "firebase": "^11.7.3",
     "leaflet": "^1.9.4",
     "lodash": "^4.17.21"
   }
