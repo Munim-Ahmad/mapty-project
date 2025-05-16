@@ -120,6 +120,12 @@ class App {
     });
 
     this.btnLogout.addEventListener('click', async () => {
+      this.#map.eachLayer((layer) => {
+        if (layer instanceof L.Marker) {
+          this.#map.removeLayer(layer);
+        }
+      });
+
       await signOut(auth);
     });
   }
@@ -218,7 +224,7 @@ class App {
   _showForm(mapE) {
     console.log('show form called');
     this.#mapEvent = mapE;
-    this.form.style.display = 'block';
+    this.form.classList.remove('hidden');
     this.inputDistance.focus();
   }
 
