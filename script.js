@@ -216,6 +216,7 @@ class App {
   }
 
   _showForm(mapE) {
+    console.log('show form called');
     this.#mapEvent = mapE;
     this.form.style.display = 'block';
     this.inputDistance.focus();
