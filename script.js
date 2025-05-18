@@ -1,5 +1,5 @@
 mapboxgl.accessToken =
-  sk.eyJ1IjoibXVuaW0tYWhtYWQiLCJhIjoiY21hdTJ5eHlqMDdqYzJpczVjcDM5cjdsNSJ9.LVj7nRw1lNc8kbW3Mhsp0A;
+  'sk.eyJ1IjoibXVuaW0tYWhtYWQiLCJhIjoiY21hdTJ5eHlqMDdqYzJpczVjcDM5cjdsNSJ9.LVj7nRw1lNc8kbW3Mhsp0A';
 ('use strict');
 
 import { auth, db } from './firebase.js';
