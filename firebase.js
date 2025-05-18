@@ -3,13 +3,13 @@ import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
 const firebaseConfig = {
-  apiKey: process.env.VITE_FIREBASE_API_KEY,
-  authDomain: process.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.VITE_FIREBASE_APP_ID,
-  measurementId: process.env.VITE_FIREBASE_MEASUREMENT_ID,
+  apiKey: 'AIzaSyCvQyAG7LgzNdY1usEHmotUqXH44eYpHjM',
+  authDomain: 'mapty-6cfaa.firebaseapp.com',
+  projectId: 'mapty-6cfaa',
+  storageBucket: 'mapty-6cfaa.firebasestorage.app',
+  messagingSenderId: '32247320501',
+  appId: '1:32247320501:web:90150b0d44a31adb5d13fc',
+  measurementId: 'G-X5MBNSBDE7',
 };
 
 // Initialize Firebase
