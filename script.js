@@ -1,6 +1,8 @@
+mapboxgl.accessToken = process.env.VITE_MAPBOX_ACCESS_TOKEN;
+('use strict');
+
 import { auth, db } from './firebase.js';
 import {
-  getAuth,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut,
@@ -32,14 +34,26 @@ class Workout {
     this.distance = distance;
     this.duration = duration;
   }
+
+  _setDescription() {
+    this.description = `${this.type[0].toUpperCase()}${this.type.slice(
+      1,
+    )} on ${new Intl.DateTimeFormat('en-US', {
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric',
+    }).format(this.date)}`;
+  }
 }
 
 class Running extends Workout {
   type = 'running';
+
   constructor(coords, distance, duration, cadence) {
     super(coords, distance, duration);
     this.cadence = cadence;
     this.calcPace();
+    this._setDescription();
   }
   calcPace() {
     this.pace = this.duration / this.distance;
@@ -49,10 +63,12 @@ class Running extends Workout {
 
 class Cycling extends Workout {
   type = 'cycling';
+
   constructor(coords, distance, duration, elevationGain) {
     super(coords, distance, duration);
     this.elevationGain = elevationGain;
     this.calcSpeed();
+    this._setDescription();
   }
   calcSpeed() {
     this.speed = this.distance / (this.duration / 60);
@@ -60,97 +76,139 @@ class Cycling extends Workout {
   }
 }
 
+const form = document.querySelector('.form');
+const containerWorkouts = document.querySelector('.workouts');
+const inputType = document.querySelector('.form__input--type');
+const inputDistance = document.querySelector('.form__input--distance');
+const inputDuration = document.querySelector('.form__input--duration');
+const inputCadence = document.querySelector('.form__input--cadence');
+const inputElevation = document.querySelector('.form__input--elevation');
+
+const containerAuth = document.querySelector('.auth'); // Assuming a container for auth elements
+const btnLogin = document.getElementById('btn-login'); // Use ID
+const btnSignup = document.getElementById('btn-signup'); // Use ID
+const btnLogout = document.getElementById('btn-logout'); // Use ID
+const emailInput = document.getElementById('email'); // Use ID
+const passwordInput = document.getElementById('password'); // Use ID
+const userInfo = document.getElementById('user-info'); // Use ID
+
+// const userInfo = document.getElementById('user-info');
 class App {
   #map;
   #mapEvent;
+  #markers = [];
   #workouts = [];
+  #mapZoomLevel = 13;
   #currentUser = null;
 
   constructor() {
     this._getPosition();
-
-    this.form = document.querySelector('.form');
-    this.containerWorkouts = document.querySelector('.workouts');
-    this.inputType = document.querySelector('.form__input--type');
-    this.inputDistance = document.querySelector('.form__input--distance');
-    this.inputDuration = document.querySelector('.form__input--duration');
-    this.inputCadence = document.querySelector('.form__input--cadence');
-    this.inputElevation = document.querySelector('.form__input--elevation');
-
     this._initAuthUI();
     this._setupAuthListener();
 
-    this.form.addEventListener('submit', this._newWorkout.bind(this));
-    this.inputType.addEventListener(
-      'change',
-      this._toggleElevationField.bind(this),
-    );
+    form.addEventListener('submit', this._newWorkout.bind(this));
+    inputType.addEventListener('change', this._toggleElevationField);
+    containerWorkouts.addEventListener('click', this._moveToPopup.bind(this));
   }
 
   _initAuthUI() {
-    this.emailInput = document.getElementById('email');
-    this.passwordInput = document.getElementById('password');
-    this.btnLogin = document.getElementById('btn-login');
-    this.btnSignup = document.getElementById('btn-signup');
-    this.btnLogout = document.getElementById('btn-logout');
-    this.userInfo = document.getElementById('user-info');
+    // Add event listeners to auth buttons
 
-    this.btnLogin.addEventListener('click', async () => {
-      try {
-        await signInWithEmailAndPassword(
-          auth,
-          this.emailInput.value,
-          this.passwordInput.value,
-        );
-      } catch (err) {
-        alert('Login failed: ' + err.message);
-      }
-    });
-
-    this.btnSignup.addEventListener('click', async () => {
-      try {
-        await createUserWithEmailAndPassword(
-          auth,
-          this.emailInput.value,
-          this.passwordInput.value,
-        );
-      } catch (err) {
-        alert('Signup failed: ' + err.message);
-      }
-    });
-
-    this.btnLogout.addEventListener('click', async () => {
-      this.#map.eachLayer((layer) => {
-        if (layer instanceof L.Marker) {
-          this.#map.removeLayer(layer);
+    if (btnLogin) {
+      // Check if element exists
+      btnLogin.addEventListener('click', async (e) => {
+        e.preventDefault(); // Prevent default form submission if inside a form
+        try {
+          await signInWithEmailAndPassword(
+            auth,
+            emailInput.value,
+            passwordInput.value,
+          );
+        } catch (err) {
+          alert('Login failed: ' + err.message);
         }
       });
+    }
 
-      await signOut(auth);
-    });
+    if (btnSignup) {
+      // Check if element exists
+      btnSignup.addEventListener('click', async (e) => {
+        e.preventDefault(); // Prevent default link/form behavior
+        try {
+          await createUserWithEmailAndPassword(
+            auth,
+            emailInput.value,
+            passwordInput.value,
+          );
+        } catch (err) {
+          alert('Signup failed: ' + err.message);
+        }
+      });
+    }
+
+    if (btnLogout) {
+      // Check if element exists
+      btnLogout.addEventListener('click', async () => {
+        // The markers are removed when the auth state changes in _setupAuthListener
+        await signOut(auth);
+      });
+    }
+
+    // Initial state of buttons/inputs (hidden by default in HTML/CSS preferably)
+    // Handled by _setupAuthListener based on initial auth state.
   }
 
   _setupAuthListener() {
     onAuthStateChanged(auth, (user) => {
+      // Ensure all relevant elements are selected
+      const btnLogin = document.getElementById('btn-login');
+      const btnSignup = document.getElementById('btn-signup');
+      const btnLogout = document.getElementById('btn-logout');
+      const emailInput = document.getElementById('email');
+      const passwordInput = document.getElementById('password');
+      const userInfo = document.getElementById('user-info');
+
       if (user) {
+        // User is logged in
         this.#currentUser = user;
-        this.userInfo.textContent = `Logged in as: ${user.email}`;
-        this.btnLogout.style.display = 'inline-block';
-        this.btnLogin.style.display = 'none';
-        this.btnSignup.style.display = 'none';
-        this.emailInput.style.display = 'none';
-        this.passwordInput.style.display = 'none';
+        if (userInfo) userInfo.textContent = `Logged in as: ${user.email}`;
+
+        // Hide login/signup, show logout
+        if (btnLogout) {
+          btnLogout.classList.remove('hidden');
+          // *** ADD THIS LINE: Remove the hidden attribute ***
+          btnLogout.removeAttribute('hidden');
+        }
+        if (btnLogin) btnLogin.classList.add('hidden');
+        if (btnSignup) btnSignup.classList.add('hidden');
+        if (emailInput) emailInput.classList.add('hidden');
+        if (passwordInput) passwordInput.classList.add('hidden');
+
         this._loadWorkoutsFromFirestore();
       } else {
+        // User is logged out
         this.#currentUser = null;
-        this.userInfo.textContent = 'Not logged in';
-        this.btnLogout.style.display = 'none';
-        this.btnLogin.style.display = 'inline-block';
-        this.btnSignup.style.display = 'inline-block';
-        this.emailInput.style.display = 'inline-block';
-        this.passwordInput.style.display = 'inline-block';
+        if (userInfo) userInfo.textContent = 'Not logged in';
+
+        // Show login/signup, hide logout
+        if (btnLogout) {
+          btnLogout.classList.add('hidden');
+          // Optionally, you could add the hidden attribute back here if you prefer
+          // setAttribute, but relying on the 'hidden' class is usually sufficient
+          // btnLogout.setAttribute('hidden', '');
+        }
+        if (btnLogin) btnLogin.classList.remove('hidden');
+        if (btnSignup) btnSignup.classList.remove('hidden');
+        if (emailInput) emailInput.classList.remove('hidden');
+        if (passwordInput) passwordInput.classList.remove('hidden');
+
+        // Clear workouts and markers when logged out
         this.#workouts = [];
         this._clearWorkoutsUI();
+
+        // Remove all markers from the map
+        this.#markers.forEach((marker) => marker.remove());
+        this.#markers = []; // Clear the internal markers array
       }
     });
   }
@@ -208,97 +266,153 @@ class App {
   }
 
   _loadMap(position) {
-    const { latitude, longitude } = position.coords;
-    const coords = [latitude, longitude];
+    const { latitude } = position.coords;
+    const { longitude } = position.coords;
 
-    this.#map = L.map('map').setView(coords, 13);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution:
-        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-    }).addTo(this.#map);
+    const coords = [longitude, latitude];
+
+    this.#map = new mapboxgl.Map({
+      container: 'map',
+      style: 'mapbox://styles/mapbox/streets-v12',
+      center: coords,
+      zoom: 13,
+    });
+
+    const el = document.createElement('div');
+    el.className = 'dot-marker';
+
+    const marker = new mapboxgl.Marker(el);
+    marker.setLngLat(coords).addTo(this.#map);
 
     this.#map.on('click', this._showForm.bind(this));
     this.#workouts.forEach((work) => this._renderWorkoutMarker(work));
   }
 
   _showForm(mapE) {
-    console.log('show form called');
     this.#mapEvent = mapE;
-    this.form.classList.remove('hidden');
-    this.inputDistance.focus();
+    form.classList.remove('hidden');
+    inputDistance.focus();
   }
 
   _hideForm() {
-    this.inputDistance.value =
-      this.inputDuration.value =
-      this.inputCadence.value =
-      this.inputElevation.value =
+    inputDistance.value =
+      inputDuration.value =
+      inputCadence.value =
+      inputElevation.value =
         '';
-    this.form.style.display = 'none';
+    form.classList.add('hidden');
   }
 
   _toggleElevationField() {
-    const isRunning = this.inputType.value === 'running';
-    this.inputCadence.style.display = isRunning ? 'block' : 'none';
-    this.inputElevation.style.display = isRunning ? 'none' : 'block';
+    inputElevation.closest('.form__row').classList.toggle('form__row--hidden');
+    inputCadence.closest('.form__row').classList.toggle('form__row--hidden');
   }
 
   _renderWorkoutMarker(workout) {
-    L.marker(workout.coords)
-      .addTo(this.#map)
-      .bindPopup(
-        L.popup({
-          maxWidth: 250,
-          minWidth: 100,
-          autoClose: false,
+    const marker = new mapboxgl.Marker({
+      color: workout.type === 'running' ? 'green' : 'orange',
+      anchor: 'bottom',
+      offset: [0, -20],
+    });
+    marker
+      .setLngLat(workout.coords)
+      .setPopup(
+        new mapboxgl.Popup({
+          maxWidth: '250px',
           closeOnClick: false,
+          closeButton: false,
           className: `${workout.type}-popup`,
-        }),
-      )
-      .setPopupContent(
-        `${workout.type === 'running' ? '🏃‍♂️' : '🚴‍♀️'} ${
+        }).setHTML(`
+            <p>${workout.type === 'running' ? '🏃‍♂️' : '🚴‍♀️'} ${
           workout.type
-        } on ${workout.date.toDateString().slice(4)}`,
+        } on ${workout.date.toDateString().slice(4)}</p>
+            <p>Distance: ${workout.distance} km</p>
+            <p>Duration: ${workout.duration} min</p>
+          `),
       )
-      .openPopup();
+      .addTo(this.#map)
+      .togglePopup();
+    this.#markers.push(marker);
   }
 
   _renderWorkout(workout) {
     let html = `
       <li class="workout workout--${workout.type}" data-id="${workout.id}">
-        <h2 class="workout__title">${
-          workout.type[0].toUpperCase() + workout.type.slice(1)
-        } on ${workout.date.toDateString().slice(4)}</h2>
+        <h2 class="workout__title">${workout.description}</h2>
         <div class="workout__details">
-          <span>Distance: ${workout.distance} km</span>
-          <span>Duration: ${workout.duration} min</span>
+          <span class="workout__icon">${
+            workout.type === 'running' ? '🏃‍♂️' : '🚴‍♀️'
+          }</span>
+          <span class="workout__value">${workout.distance}</span>
+          <span class="workout__unit">km</span>
+        </div>
+        <div class="workout__details">
+          <span class="workout__icon">⏱</span>
+          <span class="workout__value">${workout.duration}</span>
+          <span class="workout__unit">min</span>
+        </div>
     `;
 
-    if (workout.type === 'running') {
+    if (workout.type === 'running')
       html += `
-          <span>Cadence: ${workout.cadence} spm</span>
-          <span>Pace: ${workout.pace.toFixed(1)} min/km</span>
+        <div class="workout__details">
+          <span class="workout__icon">⚡️</span>
+          <span class="workout__value">${workout.pace.toFixed(1)}</span>
+          <span class="workout__unit">min/km</span>
         </div>
-      </li>`;
-    } else {
-      html += `
-          <span>Elevation Gain: ${workout.elevationGain} m</span>
-          <span>Speed: ${workout.speed.toFixed(1)} km/h</span>
+        <div class="workout__details">
+          <span class="workout__icon">🦶🏼</span>
+          <span class="workout__value">${workout.cadence}</span>
+          <span class="workout__unit">spm</span>
         </div>
-      </li>`;
-    }
+      </li>
+      `;
 
-    this.containerWorkouts.insertAdjacentHTML('beforeend', html);
+    if (workout.type === 'cycling')
+      html += `
+        <div class="workout__details">
+          <span class="workout__icon">⚡️</span>
+          <span class="workout__value">${workout.speed.toFixed(1)}</span>
+          <span class="workout__unit">km/h</span>
+        </div>
+        <div class="workout__details">
+          <span class="workout__icon">⛰</span>
+          <span class="workout__value">${workout.elevationGain}</span>
+          <span class="workout__unit">m</span>
+        </div>
+      </li>
+      `;
+
+    form.insertAdjacentHTML('afterend', html);
+  }
+
+  _moveToPopup(e) {
+    if (!this.#map) return;
+
+    const workoutEl = e.target.closest('.workout');
+    if (!workoutEl) return;
+
+    const workout = this.#workouts.find(
+      (work) => work.id === workoutEl.dataset.id,
+    );
+
+    this.#map.flyTo({
+      center: workout.coords,
+      zoom: this.#mapZoomLevel,
+      speed: 1.2,
+      curve: 1.42,
+      essential: true,
+    });
   }
 
   async _newWorkout(e) {
     e.preventDefault();
     if (!this.#currentUser) return alert('Please log in to add workouts.');
 
-    const type = this.inputType.value;
-    const distance = +this.inputDistance.value;
-    const duration = +this.inputDuration.value;
-    const { lat, lng } = this.#mapEvent.latlng;
+    const type = inputType.value;
+    const distance = +inputDistance.value;
+    const duration = +inputDuration.value;
+    const { lng, lat } = this.#mapEvent.lngLat;
 
     const validInputs = (...inputs) =>
       inputs.every((inp) => Number.isFinite(inp));
@@ -306,17 +420,20 @@ class App {
 
     let workout;
     if (type === 'running') {
-      const cadence = +this.inputCadence.value;
+      const cadence = +inputCadence.value;
+
       if (
         !validInputs(distance, duration, cadence) ||
         !allPositive(distance, duration, cadence)
       )
         return alert('Inputs must be positive numbers!');
-      workout = new Running([lat, lng], distance, duration, cadence);
+
+      workout = new Running([lng, lat], distance, duration, cadence);
     }
 
     if (type === 'cycling') {
-      const elevation = +this.inputElevation.value;
+      const elevation = +inputElevation.value;
+
       if (
         !validInputs(distance, duration, elevation) ||
         !allPositive(distance, duration)
@@ -324,7 +441,8 @@ class App {
         return alert(
           'Inputs must be positive numbers! Elevation can be negative.',
         );
-      workout = new Cycling([lat, lng], distance, duration, elevation);
+
+      workout = new Cycling([lng, lat], distance, duration, elevation);
     }
 
     this.#workouts.push(workout);

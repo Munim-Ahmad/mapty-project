@@ -26,26 +26,22 @@ body {
   font-weight: 400;
   line-height: 1.6;
   height: 100vh;
+  width: 100vw;
   overscroll-behavior-y: none;
 
-  background-color: #fff;
-  padding: 2.5rem;
+  background-color: #001f3f;
 
   display: flex;
-  overflow: hidden;
 }
 
 /* GENERAL */
 a:link,
 a:visited {
   color: var(--color-brand--1);
-  text-decoration: none;
 }
 
-a:hover,
-a:focus {
-  text-decoration: underline;
-  outline: none;
+.hidden {
+  display: none;
 }
 
 /* SIDEBAR */
@@ -63,32 +59,26 @@ a:focus {
   margin-bottom: 4rem;
 }
 
+.auth-container {
+  max-width: 400px;
+  margin: 4rem auto;
+  padding: 2rem;
+  background-color: #1c1c1c;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  color: #eee;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
 .workouts {
   list-style: none;
   height: 77vh;
-  overflow-y: auto;
+  overflow-y: scroll;
   overflow-x: hidden;
-  scroll-behavior: smooth;
-  -webkit-overflow-scrolling: touch;
 }
 
 .workouts::-webkit-scrollbar {
-  width: 6px;
-}
-
-.workouts::-webkit-scrollbar-thumb {
-  background-color: var(--color-brand--1);
-  border-radius: 3px;
-}
-
-.workouts::-webkit-scrollbar-track {
-  background-color: var(--color-dark--2);
-}
-
-/* For Firefox */
-.workouts {
-  scrollbar-width: thin;
-  scrollbar-color: var(--color-brand--1) var(--color-dark--2);
+  width: 0;
 }
 
 .workout {
@@ -99,22 +89,12 @@ a:focus {
   cursor: pointer;
 
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: 1fr 1fr 1fr 1fr;
   gap: 0.75rem 1.5rem;
-  transition: background-color 0.3s ease;
 }
-
-.workout:hover,
-.workout:focus {
-  background-color: var(--color-brand--1);
-  color: var(--color-dark--1);
-  outline: none;
-}
-
 .workout--running {
   border-left: 5px solid var(--color-brand--2);
 }
-
 .workout--cycling {
   border-left: 5px solid var(--color-brand--1);
 }
@@ -158,8 +138,9 @@ a:focus {
   grid-template-columns: 1fr 1fr;
   gap: 0.5rem 2.5rem;
 
+  /* Match height and activity boxes */
   height: 9.25rem;
-  transition: all 0.5s, transform 0.2s ease-in-out;
+  transition: all 0.5s, transform 1ms;
 }
 
 .form.hidden {
@@ -168,7 +149,6 @@ a:focus {
   padding: 0 2.25rem;
   margin-bottom: 0;
   opacity: 0;
-  pointer-events: none;
 }
 
 .form__row {
@@ -184,7 +164,6 @@ a:focus {
   flex: 0 0 50%;
   font-size: 1.5rem;
   font-weight: 600;
-  color: var(--color-light--1);
 }
 
 .form__input {
@@ -195,41 +174,16 @@ a:focus {
   border: none;
   border-radius: 3px;
   background-color: var(--color-light--3);
-  transition: background-color 0.2s, box-shadow 0.2s;
-  color: var(--color-dark--1);
-}
-
-.form__input::placeholder {
-  color: var(--color-light--1);
+  transition: all 0.2s;
 }
 
 .form__input:focus {
-  outline: 2px solid var(--color-brand--1);
+  outline: none;
   background-color: #fff;
-  box-shadow: 0 0 4px var(--color-brand--1);
 }
 
 .form__btn {
-  display: inline-block;
-  grid-column: 1 / -1;
-  background-color: var(--color-brand--1);
-  color: var(--color-dark--1);
-  font-weight: 700;
-  border: none;
-  border-radius: 5px;
-  padding: 0.8rem 2rem;
-  font-size: 1.6rem;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-  text-transform: uppercase;
-  align-self: center;
-  justify-self: center;
-}
-
-.form__btn:hover,
-.form__btn:focus {
-  background-color: var(--color-brand--2);
-  outline: none;
+  display: none;
 }
 
 .copyright {
@@ -242,7 +196,21 @@ a:focus {
 .twitter-link:link,
 .twitter-link:visited {
   color: var(--color-light--1);
-  transition: color 0.2s ease;
+  transition: all 0.2s;
+}
+
+.form__message {
+  font-size: 0.95rem;
+  margin-top: 1rem;
+  color: #ccc;
+  text-align: center;
+}
+
+.form__message .link {
+  color: #00bcd4;
+  cursor: pointer;
+  font-weight: 500;
+  transition: color 0.2s;
 }
 
 .twitter-link:hover,
@@ -257,41 +225,30 @@ a:focus {
   background-color: var(--color-light--1);
 }
 
-/* Popup width is defined in JS using options */
-.leaflet-popup .leaflet-popup-content-wrapper {
-  background-color: var(--color-dark--1);
-  color: var(--color-light--2);
-  border-radius: 5px;
-  padding-right: 0.6rem;
+.dot-marker {
+  width: 15px;
+  height: 15px;
+  background-color: #007cbf;
+  border-radius: 50%;
+  border: 2px solid white;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
 }
 
-.leaflet-popup .leaflet-popup-content {
+.mapboxgl-popup-content {
+  background-color: var(--color-dark--1);
+  color: var(--color-dark--1);
+  border-radius: 5px;
+  padding-right: 0.6rem;
   font-size: 1.5rem;
 }
 
-.leaflet-popup .leaflet-popup-tip {
+.mapboxgl-popup-tip {
   background-color: var(--color-dark--1);
 }
 
-.running-popup .leaflet-popup-content-wrapper {
+.running-popup .mapboxgl-popup-content {
   border-left: 5px solid var(--color-brand--2);
 }
-
-.cycling-popup .leaflet-popup-content-wrapper {
+.cycling-popup .mapboxgl-popup-content {
   border-left: 5px solid var(--color-brand--1);
-}
-
-/* RESPONSIVE */
-@media (max-width: 768px) {
-  body {
-    flex-direction: column;
-    padding: 1rem;
-  }
-  .sidebar {
-    flex-basis: auto;
-    padding: 2rem;
-  }
-  #map {
-    height: 50vh;
-  }
 }
