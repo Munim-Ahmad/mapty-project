@@ -32,23 +32,21 @@
     ></script>
     <script type="module" defer src="firebase.js"></script>
     <script type="module" defer src="script.js"></script>
-    `
+
     <title>mapty // Map your workouts</title>
   </head>
   <body>
     <div class="sidebar">
-      <img src="logo.png" alt="Logo" class="logo" />
-      <!-- Authentication UI -->
-      <div class="auth-container">
-        <h3>Sign In / Register</h3>
-        <input id="email" type="email" placeholder="Email" />
-        <input id="password" type="password" placeholder="Password" />
-        <button id="btn-login">Log In</button>
-        <button id="btn-signup">Sign Up</button>
-        <button id="btn-logout" hidden>Log Out</button>
-        <p id="auth-status"></p>
-        <p id="user-info"></p>
+      <div class="sidebar__logo__signin">
+        <img src="logo.png" alt="Logo" class="logo" />
+        <button id="signin-btn" class="hidden">
+          <img src="/7123025_logo_google_g_icon.svg" />
+        </button>
+        <button id="signout-btn" class="">
+          <img id="signout-btn-inner" src="/logout-svgrepo-com.svg" />
+        </button>
       </div>
+
       <ul class="workouts">
         <form class="form hidden">
           <div class="form__row">

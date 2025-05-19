@@ -53,10 +53,41 @@ a:visited {
   flex-direction: column;
 }
 
+.sidebar img {
+  justify-self: left;
+}
+.sidebar__logo__signin {
+  padding: 20px;
+  width: 100%;
+  display: flex !important;
+  justify-content: space-between;
+  align-items: center;
+}
+#signin-btn {
+  width: 5vh;
+  height: 5vh;
+  background: white;
+  border: none;
+  border-radius: 50%;
+}
+
+#signout-btn {
+  width: 5vh;
+  height: 5vh;
+
+  background: white;
+  border: none;
+  border-radius: 50%;
+}
+
+#signout-btn-inner {
+  height: 2.5vh;
+  width: 2.5vh;
+}
+
 .logo {
   height: 5.2rem;
   align-self: center;
-  margin-bottom: 4rem;
 }
 
 .auth-container {

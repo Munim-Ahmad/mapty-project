@@ -4,6 +4,8 @@ mapboxgl.accessToken =
 
 import { auth, db } from './firebase.js';
 import {
+  signInWithPopup,
+  GoogleAuthProvider,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut,
@@ -92,6 +94,8 @@ const btnLogout = document.getElementById('btn-logout'); // Use ID
 const emailInput = document.getElementById('email'); // Use ID
 const passwordInput = document.getElementById('password'); // Use ID
 const userInfo = document.getElementById('user-info'); // Use ID
+const btnGoogleSignIn = document.getElementById('signin-btn');
+const btnGoogleSignOut = document.getElementById('signout-btn');
 
 // const userInfo = document.getElementById('user-info');
 class App {
@@ -114,42 +118,21 @@ class App {
 
   _initAuthUI() {
     // Add event listeners to auth buttons
-
-    if (btnLogin) {
-      // Check if element exists
-      btnLogin.addEventListener('click', async (e) => {
-        e.preventDefault(); // Prevent default form submission if inside a form
+    if (btnGoogleSignIn) {
+      btnGoogleSignIn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        const provider = new GoogleAuthProvider();
         try {
-          await signInWithEmailAndPassword(
-            auth,
-            emailInput.value,
-            passwordInput.value,
-          );
+          await signInWithPopup(auth, provider);
         } catch (err) {
-          alert('Login failed: ' + err.message);
+          alert('Google Sign-In failed: ' + err.message);
         }
       });
     }
 
-    if (btnSignup) {
+    if (btnGoogleSignOut) {
       // Check if element exists
-      btnSignup.addEventListener('click', async (e) => {
-        e.preventDefault(); // Prevent default link/form behavior
-        try {
-          await createUserWithEmailAndPassword(
-            auth,
-            emailInput.value,
-            passwordInput.value,
-          );
-        } catch (err) {
-          alert('Signup failed: ' + err.message);
-        }
-      });
-    }
-
-    if (btnLogout) {
-      // Check if element exists
-      btnLogout.addEventListener('click', async () => {
+      btnGoogleSignOut.addEventListener('click', async () => {
         // The markers are removed when the auth state changes in _setupAuthListener
         await signOut(auth);
       });
@@ -164,7 +147,8 @@ class App {
       // Ensure all relevant elements are selected
       const btnLogin = document.getElementById('btn-login');
       const btnSignup = document.getElementById('btn-signup');
-      const btnLogout = document.getElementById('btn-logout');
+      const btnGoogleSignOut = document.getElementById('signout-btn');
+      const btnGoogleSignIn = document.getElementById('signin-btn');
       const emailInput = document.getElementById('email');
       const passwordInput = document.getElementById('password');
       const userInfo = document.getElementById('user-info');
@@ -175,16 +159,8 @@ class App {
         if (userInfo) userInfo.textContent = `Logged in as: ${user.email}`;
 
         // Hide login/signup, show logout
-        if (btnLogout) {
-          btnLogout.classList.remove('hidden');
-          // *** ADD THIS LINE: Remove the hidden attribute ***
-          btnLogout.removeAttribute('hidden');
-        }
-        if (btnLogin) btnLogin.classList.add('hidden');
-        if (btnSignup) btnSignup.classList.add('hidden');
-        if (emailInput) emailInput.classList.add('hidden');
-        if (passwordInput) passwordInput.classList.add('hidden');
-
+        if (btnGoogleSignOut) btnGoogleSignOut.classList.remove('hidden');
+        if (btnGoogleSignIn) btnGoogleSignIn.classList.add('hidden');
         this._loadWorkoutsFromFirestore();
       } else {
         // User is logged out
@@ -192,17 +168,8 @@ class App {
         if (userInfo) userInfo.textContent = 'Not logged in';
 
         // Show login/signup, hide logout
-        if (btnLogout) {
-          btnLogout.classList.add('hidden');
-          // Optionally, you could add the hidden attribute back here if you prefer
-          // setAttribute, but relying on the 'hidden' class is usually sufficient
-          // btnLogout.setAttribute('hidden', '');
-        }
-        if (btnLogin) btnLogin.classList.remove('hidden');
-        if (btnSignup) btnSignup.classList.remove('hidden');
-        if (emailInput) emailInput.classList.remove('hidden');
-        if (passwordInput) passwordInput.classList.remove('hidden');
-
+        if (btnGoogleSignIn) btnGoogleSignIn.classList.remove('hidden');
+        if (btnGoogleSignOut) btnGoogleSignOut.classList.add('hidden');
         // Clear workouts and markers when logged out
         this.#workouts = [];
         this._clearWorkoutsUI();
